@@ -12,7 +12,7 @@ from PIL import Image, ImageTk
 # CONSTANTS
 # =========================
 SAVE_KEY = "SET_IT_YOURSELF"
-DEV_PASSWORD = "THAT_TO_LOL"
+DEV_PASSWORD = "DEV_PASSWORD"
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 COOKIE_IMG_PATH = os.path.join(BASE_DIR, "cookie.png")
