@@ -12,7 +12,7 @@ from PIL import Image, ImageTk
 # CONSTANTS
 # =========================
 SAVE_KEY = "8724ff54-03f7-4585-9871-edd2073dea7d"
-DEV_PASSWORD = "OxioDev-1234"
+DEV_PASSWORD = "b6676b53-91e6-4eb8-8c37-6893d0ce293a"
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 COOKIE_IMG_PATH = os.path.join(BASE_DIR, "cookie.png")
@@ -28,7 +28,7 @@ auto_clicker_cost = 50
 upgrade_cost = 20
 
 # =========================
-# ENCRYPTION
+# ENCRYPTION / ANTI-CHEAT
 # =========================
 def _xor(data: bytes, key: str) -> bytes:
     key = key.encode()
@@ -38,9 +38,6 @@ def generate_signature(data: dict) -> str:
     raw = json.dumps(data, sort_keys=True).encode()
     return hashlib.sha256(raw + SAVE_KEY.encode()).hexdigest()
 
-# =========================
-# SAVE / LOAD (ANTI-CHEAT)
-# =========================
 def save_game():
     data = {
         "cookies": cookies,
@@ -50,34 +47,26 @@ def save_game():
         "upgrade_cost": upgrade_cost,
         "time": int(time.time())
     }
-
     data["signature"] = generate_signature(data)
-
     raw = json.dumps(data).encode()
     encrypted = _xor(raw, SAVE_KEY)
     encoded = base64.b64encode(encrypted)
-
     with open(SAVE_FILE, "wb") as f:
         f.write(encoded)
 
 def load_game():
     global cookies, cookies_per_click, auto_clickers, auto_clicker_cost, upgrade_cost
-
     if not os.path.exists(SAVE_FILE):
         return
-
     try:
         with open(SAVE_FILE, "rb") as f:
             encoded = f.read()
-
         encrypted = base64.b64decode(encoded)
         raw = _xor(encrypted, SAVE_KEY)
         data = json.loads(raw.decode())
-
         sig = data.pop("signature", None)
         if sig != generate_signature(data):
             raise ValueError("Signature mismatch")
-
         # Sanity checks
         if (
             data["cookies"] < 0 or
@@ -88,13 +77,11 @@ def load_game():
             data["auto_clickers"] > 10000
         ):
             raise ValueError("Invalid values")
-
         cookies = data["cookies"]
         cookies_per_click = data["cookies_per_click"]
         auto_clickers = data["auto_clickers"]
         auto_clicker_cost = data["auto_clicker_cost"]
         upgrade_cost = data["upgrade_cost"]
-
     except Exception:
         handle_cheat()
 
@@ -161,19 +148,65 @@ def animate_click():
 # DEV PANEL
 # =========================
 def open_dev_panel():
-    password = simpledialog.askstring("Dev Panel", "Password:", show="*")
+    password = simpledialog.askstring("Dev Panel", "Enter password:", show="*")
     if password != DEV_PASSWORD:
-        messagebox.showerror("Access Denied", "Wrong password")
+        messagebox.showerror("Access Denied", "Wrong password!")
         return
 
     dev = tk.Toplevel(root)
-    dev.title("DEV PANEL")
-    dev.geometry("300x300")
+    dev.title("🍪 Dev Panel 🍪")
+    dev.geometry("350x400")
+    dev.configure(bg="#fff3e0")  # light cookie dough color
+    dev.resizable(False, False)
 
-    tk.Button(dev, text="+1000 Cookies", command=lambda: add_cookies(1000)).pack(pady=5)
-    tk.Button(dev, text="+10 Click Power", command=lambda: add_power(10)).pack(pady=5)
-    tk.Button(dev, text="+10 Auto Clickers", command=lambda: add_auto(10)).pack(pady=5)
-    tk.Button(dev, text="MAX EVERYTHING", fg="red", command=max_all).pack(pady=15)
+    tk.Label(dev, text="🍪 Cookie Dev Panel 🍪", font=("Comic Sans MS", 16, "bold"), bg="#fff3e0").pack(pady=10)
+    tk.Label(dev, text="Set Value:", font=("Helvetica", 12), bg="#fff3e0").pack(pady=5)
+    entry_value = tk.Entry(dev, font=("Helvetica", 12))
+    entry_value.pack(pady=5)
+
+    tk.Button(dev, text="Add 1000 Cookies 🍪", font=("Helvetica", 12), bg="#ffcc66",
+              command=lambda: add_cookies(1000)).pack(fill="x", padx=20, pady=5)
+    tk.Button(dev, text="Set Cookies 🍪", font=("Helvetica", 12), bg="#ffcc66",
+              command=lambda: set_cookies(entry_value.get())).pack(fill="x", padx=20, pady=5)
+    tk.Button(dev, text="Add +10 Click Power ✨", font=("Helvetica", 12), bg="#ff9966",
+              command=lambda: add_power(10)).pack(fill="x", padx=20, pady=5)
+    tk.Button(dev, text="Set Click Power ✨", font=("Helvetica", 12), bg="#ff9966",
+              command=lambda: set_power(entry_value.get())).pack(fill="x", padx=20, pady=5)
+    tk.Button(dev, text="Add +5 Auto-Clickers 🤖", font=("Helvetica", 12), bg="#ffcc99",
+              command=lambda: add_auto(5)).pack(fill="x", padx=20, pady=5)
+    tk.Button(dev, text="Set Auto-Clickers 🤖", font=("Helvetica", 12), bg="#ffcc99",
+              command=lambda: set_auto(entry_value.get())).pack(fill="x", padx=20, pady=5)
+    tk.Button(dev, text="Max Everything 🌟", font=("Helvetica", 12), bg="#ff9999",
+              command=max_all).pack(fill="x", padx=20, pady=10)
+    tk.Button(dev, text="Reset Game ♻️", font=("Helvetica", 12), bg="#cccccc",
+              command=reset_game).pack(fill="x", padx=20, pady=5)
+    tk.Label(dev, text="*Tip: You can use numbers in the entry box*", font=("Helvetica", 10, "italic"),
+             bg="#fff3e0").pack(pady=5)
+
+# ===== DEV FUNCTIONS =====
+def set_cookies(val):
+    global cookies
+    try:
+        cookies = int(val)
+    except:
+        messagebox.showerror("Invalid Input", "Enter a valid number")
+    update_labels()
+
+def set_power(val):
+    global cookies_per_click
+    try:
+        cookies_per_click = int(val)
+    except:
+        messagebox.showerror("Invalid Input", "Enter a valid number")
+    update_labels()
+
+def set_auto(val):
+    global auto_clickers
+    try:
+        auto_clickers = int(val)
+    except:
+        messagebox.showerror("Invalid Input", "Enter a valid number")
+    update_labels()
 
 def add_cookies(amount):
     global cookies
@@ -192,9 +225,9 @@ def add_auto(amount):
 
 def max_all():
     global cookies, cookies_per_click, auto_clickers
-    cookies = 999_999_999
-    cookies_per_click = 999
-    auto_clickers = 999
+    cookies = 999_999_999_999
+    cookies_per_click = 999999
+    auto_clickers = 999999
     update_labels()
 
 # =========================
@@ -209,10 +242,8 @@ root.bind("*", lambda e: open_dev_panel())
 
 cookie_label = tk.Label(root, font=("Comic Sans MS", 20, "bold"), bg="#fdf6e3")
 cookie_label.pack(pady=10)
-
 click_label = tk.Label(root, font=("Helvetica", 14), bg="#fdf6e3")
 click_label.pack()
-
 auto_label = tk.Label(root, font=("Helvetica", 14), bg="#fdf6e3")
 auto_label.pack()
 
