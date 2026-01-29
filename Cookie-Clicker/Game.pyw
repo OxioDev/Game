@@ -11,8 +11,8 @@ from PIL import Image, ImageTk
 # =========================
 # CONSTANTS
 # =========================
-SAVE_KEY = "8724ff54-03f7-4585-9871-edd2073dea7d"
-DEV_PASSWORD = "b6676b53-91e6-4eb8-8c37-6893d0ce293a"
+SAVE_KEY = "SET_IT_YOURSELF"
+DEV_PASSWORD = "THAT_TO_LOL"
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 COOKIE_IMG_PATH = os.path.join(BASE_DIR, "cookie.png")
@@ -155,7 +155,7 @@ def open_dev_panel():
 
     dev = tk.Toplevel(root)
     dev.title("🍪 Dev Panel 🍪")
-    dev.geometry("350x400")
+    dev.geometry("500x550")
     dev.configure(bg="#fff3e0")  # light cookie dough color
     dev.resizable(False, False)
 
